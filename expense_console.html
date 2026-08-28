@@ -1,0 +1,636 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Expense Console</title>
+
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
+
+:root {
+  --bg:#0a0e0f;
+  --panel:#10171a;
+  --panel-2:#0d1315;
+  --border:#1d2b2e;
+  --text:#d7e4e2;
+  --dim:#5f7876;
+  --cyan:#3ee6c9;
+  --amber:#f2a84b;
+  --red:#e6614b;
+}
+
+* {
+  box-sizing:border-box;
+}
+
+body {
+  margin:0;
+  background:radial-gradient(ellipse at top, #10201f 0%, var(--bg) 55%);
+  color:var(--text);
+  font-family:'JetBrains Mono', monospace;
+  min-height:100vh;
+  padding:40px 20px;
+  display:flex;
+  justify-content:center;
+}
+
+.console {
+  width:100%;
+  max-width:760px;
+}
+
+header {
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  margin-bottom:24px;
+}
+
+.brand {
+  font-family:'Space Grotesk', sans-serif;
+  font-weight:700;
+  font-size:1.4rem;
+}
+
+.brand::before {
+  content:'●';
+  color:var(--cyan);
+  margin-right:8px;
+  font-size:0.8rem;
+}
+
+.status {
+  font-size:0.7rem;
+  color:var(--dim);
+  text-transform:uppercase;
+  letter-spacing:0.1em;
+  display:flex;
+  align-items:center;
+  gap:6px;
+}
+
+.dot {
+  width:6px;
+  height:6px;
+  border-radius:50%;
+  background:var(--cyan);
+  box-shadow:0 0 6px var(--cyan);
+}
+
+.grid {
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:14px;
+  margin-bottom:14px;
+}
+
+@media (max-width:560px) {
+  .grid {
+    grid-template-columns:1fr;
+  }
+}
+
+.card,
+.panel {
+  background:var(--panel);
+  border:1px solid var(--border);
+  border-radius:8px;
+}
+
+.card {
+  padding:18px 20px;
+}
+
+.stat-label {
+  font-size:0.65rem;
+  text-transform:uppercase;
+  letter-spacing:0.12em;
+  color:var(--dim);
+  margin-bottom:8px;
+}
+
+.stat-value {
+  font-family:'Space Grotesk', sans-serif;
+  font-size:1.9rem;
+  font-weight:700;
+}
+
+.stat-value.cyan {
+  color:var(--cyan);
+}
+
+.stat-value.amber {
+  color:var(--amber);
+}
+
+.panel {
+  padding:20px 22px;
+  margin-bottom:14px;
+}
+
+.panel-title {
+  font-size:0.7rem;
+  text-transform:uppercase;
+  letter-spacing:0.12em;
+  color:var(--dim);
+  margin-bottom:14px;
+  display:flex;
+  align-items:center;
+  gap:8px;
+}
+
+.panel-title::before {
+  content:'>';
+  color:var(--cyan);
+}
+
+form {
+  display:flex;
+  gap:10px;
+  flex-wrap:wrap;
+}
+
+input[type=text],
+input[type=number] {
+  background:var(--panel-2);
+  border:1px solid var(--border);
+  color:var(--text);
+  font-family:'JetBrains Mono', monospace;
+  font-size:0.9rem;
+  padding:10px 12px;
+  border-radius:6px;
+  outline:none;
+  flex:1;
+  min-width:140px;
+}
+
+input:focus {
+  border-color:var(--cyan);
+}
+
+input::placeholder {
+  color:var(--dim);
+}
+
+button {
+  font-family:'Space Grotesk', sans-serif;
+  font-weight:600;
+  font-size:0.85rem;
+  background:var(--cyan);
+  color:#04211c;
+  border:none;
+  padding:10px 22px;
+  border-radius:6px;
+  cursor:pointer;
+}
+
+button:hover {
+  filter:brightness(1.1);
+}
+
+table {
+  width:100%;
+  border-collapse:collapse;
+  font-size:0.88rem;
+}
+
+thead th {
+  text-align:left;
+  font-size:0.65rem;
+  text-transform:uppercase;
+  letter-spacing:0.1em;
+  color:var(--dim);
+  border-bottom:1px solid var(--border);
+  padding:0 0 10px;
+}
+
+tbody td {
+  padding:11px 0;
+  border-bottom:1px solid var(--border);
+}
+
+tbody tr:last-child td {
+  border-bottom:none;
+}
+
+td.amt {
+  text-align:right;
+  color:var(--amber);
+  font-weight:500;
+}
+
+td.del {
+  text-align:right;
+}
+
+td.del button {
+  background:none;
+  color:var(--red);
+  padding:2px 8px;
+  font-size:0.8rem;
+}
+
+.empty {
+  color:var(--dim);
+  font-size:0.85rem;
+  padding:8px 0;
+}
+
+.toast {
+  position:fixed;
+  bottom:24px;
+  left:50%;
+  transform:translateX(-50%) translateY(20px);
+  background:var(--panel);
+  border:1px solid var(--cyan);
+  color:var(--text);
+  padding:10px 18px;
+  font-size:0.8rem;
+  border-radius:6px;
+  opacity:0;
+  transition:all 0.25s ease;
+  pointer-events:none;
+}
+
+.toast.show {
+  opacity:1;
+  transform:translateX(-50%) translateY(0);
+}
+</style>
+</head>
+
+<body>
+
+<div class="console">
+
+  <header>
+    <div class="brand">expense_console</div>
+
+    <div class="status">
+      <span class="dot"></span>
+      live
+    </div>
+  </header>
+
+  <div class="grid">
+
+    <div class="card">
+      <div class="stat-label">Total spent</div>
+      <div class="stat-value amber" id="totalValue">₹0.00</div>
+    </div>
+
+    <div class="card">
+      <div class="stat-label">Entries logged</div>
+      <div class="stat-value cyan" id="countValue">0</div>
+    </div>
+
+  </div>
+
+  <section class="panel">
+
+    <div class="panel-title">
+      add_expense()
+    </div>
+
+    <form id="addForm">
+
+      <input
+        type="text"
+        id="nameInput"
+        placeholder="description"
+      >
+
+      <input
+        type="number"
+        id="amountInput"
+        placeholder="amount"
+        step="0.01"
+        min="0"
+      >
+
+      <button type="submit">
+        Execute
+      </button>
+
+    </form>
+
+    <p
+      class="empty"
+      id="formError"
+      style="display:none; color:var(--red); margin-top:10px;"
+    ></p>
+
+  </section>
+
+  <section class="panel">
+
+    <div class="panel-title">
+      view_expenses()
+    </div>
+
+    <table id="expenseTable">
+
+      <thead>
+        <tr>
+          <th>Description</th>
+          <th style="text-align:right">Amount</th>
+          <th></th>
+        </tr>
+      </thead>
+
+      <tbody id="expenseBody"></tbody>
+
+    </table>
+
+    <p class="empty" id="emptyMsg">
+      No entries yet. Run add_expense() to log one.
+    </p>
+
+  </section>
+
+</div>
+
+<div class="toast" id="toast"></div>
+
+
+<script>
+
+let expenses = [];
+
+
+/* =========================
+   LOAD EXPENSES
+========================= */
+
+async function loadExpenses() {
+
+  try {
+
+    const response = await fetch('/api/expenses');
+
+    if (!response.ok) {
+      throw new Error('Failed to load expenses');
+    }
+
+    expenses = await response.json();
+
+    renderExpenses();
+
+  } catch (error) {
+
+    console.error(error);
+
+    showError("Could not connect to the Flask server.");
+
+  }
+
+}
+
+
+/* =========================
+   DISPLAY EXPENSES
+========================= */
+
+function renderExpenses() {
+
+  const body = document.getElementById("expenseBody");
+  const emptyMsg = document.getElementById("emptyMsg");
+
+  body.innerHTML = "";
+
+  if (expenses.length === 0) {
+
+    emptyMsg.style.display = "block";
+
+  } else {
+
+    emptyMsg.style.display = "none";
+
+    expenses.forEach((expense, index) => {
+
+      const row = document.createElement("tr");
+
+      row.innerHTML = `
+        <td>${escapeHTML(expense.name)}</td>
+
+        <td class="amt">
+          ₹${Number(expense.amount).toFixed(2)}
+        </td>
+
+        <td class="del">
+          <button onclick="deleteExpense(${index})">
+            delete
+          </button>
+        </td>
+      `;
+
+      body.appendChild(row);
+
+    });
+
+  }
+
+  updateStats();
+
+}
+
+
+/* =========================
+   UPDATE TOTAL
+========================= */
+
+function updateStats() {
+
+  const total = expenses.reduce(
+    (sum, expense) => sum + Number(expense.amount),
+    0
+  );
+
+  document.getElementById("totalValue").textContent =
+    `₹${total.toFixed(2)}`;
+
+  document.getElementById("countValue").textContent =
+    expenses.length;
+
+}
+
+
+/* =========================
+   ADD EXPENSE
+========================= */
+
+document.getElementById("addForm").addEventListener(
+  "submit",
+  async function(event) {
+
+    event.preventDefault();
+
+    const name =
+      document.getElementById("nameInput").value.trim();
+
+    const amount =
+      document.getElementById("amountInput").value;
+
+    const error =
+      document.getElementById("formError");
+
+    error.style.display = "none";
+
+    if (!name) {
+
+      showError("Please enter a description.");
+      return;
+
+    }
+
+    if (!amount || Number(amount) <= 0) {
+
+      showError("Please enter a valid amount.");
+      return;
+
+    }
+
+    try {
+
+      const response = await fetch(
+        "/api/expenses",
+        {
+          method: "POST",
+
+          headers: {
+            "Content-Type": "application/json"
+          },
+
+          body: JSON.stringify({
+            name: name,
+            amount: Number(amount)
+          })
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error("Failed to add expense");
+      }
+
+      document.getElementById("nameInput").value = "";
+      document.getElementById("amountInput").value = "";
+
+      await loadExpenses();
+
+      showToast("Expense added successfully!");
+
+    } catch (error) {
+
+      console.error(error);
+
+      showError(
+        "Could not add expense. Check your Flask backend."
+      );
+
+    }
+
+  }
+);
+
+
+/* =========================
+   DELETE EXPENSE
+========================= */
+
+async function deleteExpense(index) {
+
+  try {
+
+    const expense = expenses[index];
+
+    const response = await fetch(
+      `/api/expenses/${expense.id}`,
+      {
+        method: "DELETE"
+      }
+    );
+
+    if (!response.ok) {
+      throw new Error("Failed to delete expense");
+    }
+
+    await loadExpenses();
+
+    showToast("Expense deleted.");
+
+  } catch (error) {
+
+    console.error(error);
+
+    showError(
+      "Could not delete expense."
+    );
+
+  }
+
+}
+
+
+/* =========================
+   ERROR MESSAGE
+========================= */
+
+function showError(message) {
+
+  const error =
+    document.getElementById("formError");
+
+  error.textContent = message;
+  error.style.display = "block";
+
+}
+
+
+/* =========================
+   TOAST MESSAGE
+========================= */
+
+function showToast(message) {
+
+  const toast =
+    document.getElementById("toast");
+
+  toast.textContent = message;
+
+  toast.classList.add("show");
+
+  setTimeout(() => {
+
+    toast.classList.remove("show");
+
+  }, 2000);
+
+}
+
+
+/* =========================
+   SECURITY
+========================= */
+
+function escapeHTML(text) {
+
+  const div = document.createElement("div");
+
+  div.textContent = text;
+
+  return div.innerHTML;
+
+}
+
+
+/* =========================
+   START
+========================= */
+
+loadExpenses();
+
+</script>
+
+</body>
+</html>
