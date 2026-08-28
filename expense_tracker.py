@@ -19,8 +19,9 @@ def home():
 def view_expenses():
     expenses = []
 
-    for item in expense:
+    for index, item in enumerate(expense):
         expenses.append({
+            "id": index,
             "name": item[0],
             "amount": item[1]
         })
